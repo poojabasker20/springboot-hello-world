@@ -3,109 +3,70 @@ package com.nordea.demo.helloworld;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.web.servlet.client.RestTestClient;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * 1. Unit Testing GreetingController using RestTestClient.bindToController(...)
- * Runs in pure isolation without loading any Spring application context.
+ * Unit Testing GreetingController using Standalone MockMvc
  */
 public class GreetingControllerTest {
 
-    private RestTestClient client;
+    private MockMvc mockMvc;
+    private GreetingController greetingController;
 
     @BeforeEach
     void setup() {
         GreetingService greetingService = new GreetingService();
-        GreetingController greetingController = new GreetingController(greetingService);
-        // Bind RestTestClient directly to the controller instance
-        this.client = RestTestClient.bindToController(greetingController).build();
+        greetingController = new GreetingController(greetingService);
+        mockMvc = MockMvcBuilders.standaloneSetup(greetingController).build();
     }
 
     @Test
-    @DisplayName("GET / should return default Hello, World! with record deserialization")
-    void testRootEndpoint() {
-        var expected = new Greeting("Hello, World!", "World");
-
-        client.get()
-                .uri("/")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(Greeting.class)
-                .isEqualTo(expected)
-                .value(greeting -> {
-                    assertEquals("Hello, World!", greeting.message());
-                    assertEquals("World", greeting.recipient());
-                });
+    @DisplayName("GET / should return default Hello, World!")
+    void testRootEndpoint() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Hello, World!"))
+                .andExpect(jsonPath("$.recipient").value("World"));
     }
 
     @Test
-    @DisplayName("GET /hello with default query parameter should return Hello, World!")
-    void testHelloDefault() {
-        client.get()
-                .uri("/hello")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(Greeting.class)
-                .value(greeting -> {
-                    assertEquals("Hello, World!", greeting.message());
-                    assertEquals("World", greeting.recipient());
-                });
+    @DisplayName("GET /hello with default param should return Hello, World!")
+    void testHelloDefault() throws Exception {
+        mockMvc.perform(get("/hello"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Hello, World!"))
+                .andExpect(jsonPath("$.recipient").value("World"));
     }
 
     @Test
     @DisplayName("GET /hello?name=Alice should return personalized greeting")
-    void testHelloWithQueryParam() {
-        client.get()
-                .uri("/hello?name=Alice")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(Greeting.class)
-                .value(greeting -> {
-                    assertEquals("Hello, Alice!", greeting.message());
-                    assertEquals("Alice", greeting.recipient());
-                });
+    void testHelloWithQueryParam() throws Exception {
+        mockMvc.perform(get("/hello?name=Alice"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Hello, Alice!"))
+                .andExpect(jsonPath("$.recipient").value("Alice"));
     }
 
     @Test
     @DisplayName("GET /hello/Bob should return personalized greeting via path variable")
-    void testHelloWithPathVariable() {
-        client.get()
-                .uri("/hello/Bob")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(Greeting.class)
-                .value(greeting -> {
-                    assertEquals("Hello, Bob!", greeting.message());
-                    assertEquals("Bob", greeting.recipient());
-                });
+    void testHelloWithPathVariable() throws Exception {
+        mockMvc.perform(get("/hello/Bob"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Hello, Bob!"))
+                .andExpect(jsonPath("$.recipient").value("Bob"));
     }
 
     @Test
-    @DisplayName("GET /hello/Charlie with fluent JsonPath assertions")
-    void testHelloJsonPath() {
-        client.get()
-                .uri("/hello/Charlie")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.message").isEqualTo("Hello, Charlie!")
-                .jsonPath("$.recipient").isEqualTo("Charlie");
-    }
-
-    @Test
-    @DisplayName("GET /hello/Developer with AssertJ assertions")
-    void testHelloAssertJ() {
-        client.get()
-                .uri("/hello/Developer")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(Greeting.class)
-                .value(greeting -> {
-                    assertThat(greeting.message()).isEqualTo("Hello, Developer!");
-                    assertThat(greeting.recipient()).isEqualTo("Developer");
-                });
+    @DisplayName("Direct unit test invocation with AssertJ")
+    void testDirectControllerCall() {
+        Greeting greeting = greetingController.hello("Developer");
+        assertThat(greeting.message()).isEqualTo("Hello, Developer!");
+        assertThat(greeting.recipient()).isEqualTo("Developer");
     }
 }
