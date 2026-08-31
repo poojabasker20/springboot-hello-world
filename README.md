@@ -1,10 +1,10 @@
 # Spring Boot Hello World Service
 
-A modern Spring Boot reference service implementing Hello World REST endpoints and tested using **`RestTestClient`** across all testing layers.
+A modern Spring Boot reference service implementing Hello World REST endpoints and tested across all testing layers.
 
 ---
 
-## 🌟 Endpoints
+## Endpoints
 
 | HTTP Method | Path | Description | Example Response |
 | :--- | :--- | :--- | :--- |
@@ -14,7 +14,7 @@ A modern Spring Boot reference service implementing Hello World REST endpoints a
 
 ---
 
-## 🎯 Testing with RestTestClient
+## Testing with RestTestClient
 
 | Testing Layer | RestTestClient Binding Method | Test Class |
 | :--- | :--- | :--- |
@@ -22,7 +22,7 @@ A modern Spring Boot reference service implementing Hello World REST endpoints a
 
 ---
 
-## 🚀 Running the Tests
+## Running the Tests
 
 To run the complete test suite:
 
